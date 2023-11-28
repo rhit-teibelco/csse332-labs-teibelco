@@ -50,6 +50,40 @@
  */
 char *find_next_field(char *input) {
   // Your code goes here.
+  
+  //Initialize vars
+  int len = strlen(input);
+  int foundSeparator = 0;
+  int start = 0;
+
+  //Search for '  '
+  for (int i = 0; i < len - 1; i++){
+    if (input[i] == 32){
+      if (input[i+1] == 32){
+        foundSeparator = 1;
+        start = i;
+        start++;
+        start++;
+        break;
+      }
+    }
+  }
+
+  //Begin alt exit
+  if (foundSeparator == 1){
+    char *s = malloc(len - start);
+
+    //Copy string
+    for (int i = start; i < len; i++){
+      s[i-start] = input[i];
+    }
+ 
+    //Alt exit
+    return s;
+  }
+
+   //Default exit
+  return input;
 }
 
 //
@@ -71,3 +105,32 @@ char *find_next_field(char *input) {
 //
 
 // Your code starts here.
+
+int  main(void){
+  char test1[] = "a  b";
+  char sol1[] = "b";
+  char *output = find_next_field(test1);
+
+  printf("Test case 1:\n");
+  printf("\tInput: \"%s\"\n", test1);
+  printf("\tExpected output: \"%s\"\n", sol1);
+  printf("\tActual output: \"%s\"\n", output);
+
+  char test2[] = "A  big long test  string with* things    in it.";
+  char sol2[] = "big long test  string with* things    in it.";
+  output = find_next_field(test2);
+  
+  printf("Test case 2:\n");
+  printf("\tInput: \"%s\"\n", test2);
+  printf("\tExpected output: \"%s\"\n", sol2);
+  printf("\tActual output: \"%s\"\n", output);
+ 
+
+  char sol3[] = "string with* things    in it.";
+  output = find_next_field(sol2);
+
+  printf("Test case 3:\n");
+  printf("\tInput: \"%s\"\n", sol2);
+  printf("\tExpected output: \"%s\"\n", sol3);
+  printf("\tActual output: \"%s\"\n", output);
+}
