@@ -32,6 +32,44 @@
  */
 char *extract_num_str(char *str) {
   // Your code goes here.
+  
+  //Set init
+  int numLength = 0;
+  int stateMajig = 0;
+  int startNumIndex = 0;
+
+  //Find length of num and starting index
+  for (int i = 0; i < strlen(str); i++){
+    if (stateMajig == 0){
+      if (str[i] > 47 && str[i] < 58){
+        startNumIndex = i;
+        stateMajig++;
+      }
+    }
+    else if (stateMajig == 1){
+      numLength++;
+      if (str[i] <= 47 || str[i] >= 58){
+        break;
+      }
+      if (i == strlen(str) - 1){
+        numLength++;
+        break;
+      }
+    }
+  }
+
+  char* sout = malloc(numLength + 1);
+
+  //Constructing num
+  int soutLength = 0;
+  for (int i = 0; i < numLength; i++){
+    sout[i] = str[i + startNumIndex];
+    soutLength++;
+  }
+
+  sout[soutLength] = '\0';
+
+  return(sout);
 }
 
 int main(int argc, char **argv) {
