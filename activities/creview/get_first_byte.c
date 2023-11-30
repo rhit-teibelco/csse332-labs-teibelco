@@ -25,7 +25,24 @@
  */
 unsigned char get_first_byte_ptr(unsigned int x) {
   // your code goes here...
-  return 0;
+  unsigned int* ptr = &x;
+  unsigned char* ptrout = malloc(8);
+  int length = 0;
+  int adj = 1;
+  
+  ptr = ptr + adj;
+  for (int i = 0; i < 8; i++){
+    ptrout[i] = ptr[i];
+    length++;
+  }
+
+  for (int i = -length; i < 0; i++){
+    printf("%x", ptr[i]);
+  }
+  printf("\n");
+
+  ptr = ptr - adj;
+  return ptrout[0];
 }
 
 /**
