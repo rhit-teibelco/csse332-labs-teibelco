@@ -10,6 +10,7 @@
 
 
 int main() {
+  signal(SIGCHL, handle_sigchld);
   char command[82];
   char *parsed_command[2];
   //takes at most two input arguments
@@ -25,6 +26,8 @@ int main() {
     }
     parsed_command[0] = command;
     if(len_1 == strlen(command)){
+      
+
       printf("Command is '%s' with no arguments\n", parsed_command[0]);
       parsed_command[1] = NULL;
 
@@ -45,5 +48,44 @@ int main() {
       }
     }
 
+      //Fork and execute
+      int pid = fork();
+      
+      //Check fork BG
+      if (command[0] == 'B' && command[1] == 'G'){
+         //Fork BG
+         memmove(command, command + 2, strlen(command));
+         if (pid == 0){
+            pid = fork();
+            if (pid == 0){
+              execlp(command, command, NULL);
+              exit(0);
+            }
+            else{
+              wait(NULL);
+              printf("Background command finished\n");
+            }
+            
+         }
+         else{
+            
+         }
+         
+      }
+      else{
+         //Fork normally
+         if (pid == 0){
+            execlp(command, command, NULL);
+            exit(0);
+         }
+         else{
+            wait(NULL);
+         }
+      } 
+
   }
+}
+
+void handle_sigchld(int ignored){
+  exit(0);
 }
