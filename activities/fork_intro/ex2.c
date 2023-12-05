@@ -2,10 +2,13 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 // STEP 1:
 // Look at the below piece of code and try to answer the question in the printf
 // on the line right before the exit call, namely, who will print the line?
+//
+// The answer is both processes.
 
 // STEP 2:
 // Adjust the below code so that the printf is only printed by the parent, but
@@ -28,11 +31,16 @@ main(int argc, char **argv)
     /* child process */
     global_var = 100;
     printf("%d: My value of the global variable is %d\n", getpid(), global_var);
-  } else {
+    printf("Child process exiting\n");
+    exit(0);
+  }
+  else {
     /* parent process */
     global_var = 200;
     printf("%d: My value of the global variable is %d\n", getpid(), global_var);
   }
+
+  wait(0);
 
   printf("Who will print this line? %d.\n", getpid());
   exit(EXIT_SUCCESS);

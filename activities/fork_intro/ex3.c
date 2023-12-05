@@ -25,4 +25,20 @@
  * OPTIONAL: read the number of children to create from the command line.
  */
 
-// TODO: Add your code here!
+int main(void){
+  int rc;
+  int index = 0;
+  rc = fork();
+
+  //Check for fork failure
+  if (rc  < 0){
+    perror("Failed to fork a process");
+    exit(EXIT_FAILURE);
+  }
+
+  //Check for child process
+  if (rc == 0){
+    index++;
+    main();
+  }
+}
