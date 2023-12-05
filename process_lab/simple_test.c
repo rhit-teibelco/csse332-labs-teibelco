@@ -55,24 +55,10 @@ void setup(void) {
   usleep(3000000);
 }
 
-void passfail(){
-  //Test pass
-  if (){
-    printf("Test failed\n");
-    return;
-  }
-  
-  //Test fail
-  printf("Test failed\n");
-}
-
 /**
  * Run all the test in the test suite.
  */
 void run_all_tests() {
-  //Setting WEXITSTATUS
-  signal(WEXITSTATUS, passfail());
-
   //Forking now
   int pid;
 
@@ -88,8 +74,10 @@ void run_all_tests() {
       char *output = test_funcs[index]();
 
       if (output == TEST_PASSED){
+        printf("Test Passed\n");
         exit(0);
       }
+      printf("Test Passed\n");
       exit(1);
     }  
   
