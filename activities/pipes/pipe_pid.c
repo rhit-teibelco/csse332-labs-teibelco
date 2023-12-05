@@ -26,10 +26,27 @@
 
 int main(int argc, char **argv) {
   pid_t pid;
+  int fd[2];
+  int nbytes;
+  char readbuff[512];
 
+  //Step 1: Call pipe(fd)
+  if (pipe(fd) < 0){
+    perror("PANIC: pipe failed: ");
+    exit(99);
+  }
+
+
+  //Step 2: We fork
   pid = fork();
   if(pid == 0) {
     // child, I am the writer
+    //Child closes reading end
+    close(fd[0]);
+
+
+    //Write message
+    write(fd[1], pid, strlen(pid));
     exit(0);
   }
 
