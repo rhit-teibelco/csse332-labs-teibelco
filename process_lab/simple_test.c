@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 #define simple_assert(message, test)                                           \
   do {                                                                         \
@@ -54,10 +55,49 @@ void setup(void) {
   usleep(3000000);
 }
 
+void passfail(){
+  //Test pass
+  if (){
+    printf("Test failed\n");
+    return;
+  }
+  
+  //Test fail
+  printf("Test failed\n");
+}
+
 /**
  * Run all the test in the test suite.
  */
-void run_all_tests() { /* TODO: Add your code here. */
+void run_all_tests() {
+  //Setting WEXITSTATUS
+  signal(WEXITSTATUS, passfail());
+
+  //Forking now
+  int pid;
+
+  //Starting loop
+  for (int index = 0; index < num_tests; index++){
+    pid = fork();
+
+    //Child process
+    //Does setup, tests a function, exits
+    if (pid == 0){
+      setup();
+
+      char *output = test_funcs[index]();
+
+      if (output == TEST_PASSED){
+        exit(0);
+      }
+      exit(1);
+    }  
+  
+    //Parent process loops
+  }
+
+  wait(0);
+  
 }
 
 char *test1() {
