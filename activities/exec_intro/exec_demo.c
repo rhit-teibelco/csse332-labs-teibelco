@@ -24,6 +24,6 @@ int main() {
 
   printf("Parent (%d): Waiting for child %d\n", getpid(), pid);
   wait(0);
-  printf("Parent (%d): Child is done, goodbye...\n");
+  printf("Parent (%d): Child is done, goodbye...\n", getpid());
 	return 0;
 }

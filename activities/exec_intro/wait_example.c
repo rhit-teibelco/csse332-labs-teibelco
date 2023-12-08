@@ -22,11 +22,10 @@ int main() {
     exit(3); // alternatively, can do return 3;
 	}
 
-  printf("Parent (%d): I created a child with PID: %d\n", getpid(), pid);
+  printf("Parent (%d): I created a child with PID: %d\n", pid, getpid());
   rc = wait(&status);
   if(rc < 0) {
-    fprintf(stderr, "Parent (%d): Something bad happened to my child!\n",
-        getpid());
+    fprintf(stderr, "Parent (%d): Something bad happened to my child!\n", pid);
     exit(EXIT_FAILURE);
   }
 
