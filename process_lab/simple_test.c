@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <time.h>
 
 #define simple_assert(message, test)                                           \
   do {                                                                         \
@@ -52,40 +53,67 @@ void setup(void) {
 
   /* imagine this function does a lot of other complicated setup that takes a
    * long time. */
-  usleep(3000000);
+  usleep(30);
+}
+
+void timeout(int signum){
+   printf("Test Timed Out\n");
+   exit(98);
 }
 
 /**
  * Run all the test in the test suite.
  */
 void run_all_tests() {
-  //Forking now
+  //Setup vars
   int pid;
+  int rc;
+  int status;
+  int cids[num_tests];
+  int start_time;
+  
+  setup();
 
   //Starting loop
   for (int index = 0; index < num_tests; index++){
+    //Forking
     pid = fork();
+    cids[index] = pid;
 
     //Child process
-    //Does setup, tests a function, exits
+    //Tests a function, exits
     if (pid == 0){
-      setup();
+      signal(SIGALRM, timeout);
+      alarm(3);
 
       char *output = test_funcs[index]();
-
+      
       if (output == TEST_PASSED){
-        printf("Test Passed\n");
         exit(0);
       }
-      printf("Test Passed\n");
-      exit(1);
-    }  
+      else{
+        exit(1);
+      }
+    }
   
     //Parent process loops
   }
 
-  wait(0);
-  
+  //Check for exits in main parent
+  for (int index = 0; index < num_tests; index++){
+    waitpid(cids[index], &status, 0);
+    int exit_code = WEXITSTATUS(status);
+ 
+    if (status == 256){
+      printf("Test Crashed\n");
+    }
+    else if (exit_code == 0){
+      printf("Test Passed\n");
+    }
+    else if(exit_code == 1){
+      printf("Test Failed\n");
+    }
+  }
 }
 
 char *test1() {
@@ -173,7 +201,7 @@ int main(int argc, char **argv) {
   add_test(test1);
   add_test(test2);
   add_test(test3);
-  /* add_test(test4); */
-  /* add_test(test5); */
+  add_test(test4);
+  add_test(test5);
   run_all_tests();
 }
