@@ -19,18 +19,37 @@
 #define WE_SPEED 2
 
 // state variables
-
+int numEW = 0;
+int numWE = 0;
+int isAmbulance = 0;
+int ambulancesWaiting = 0;
 
 // concurrency means
-
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t keyEW = PTHREAD_COND_INITIALIZER;
+pthread_cond_t keyWE = PTHREAD_COND_INITIALIZER;
 
 void *ewcar(void *arg)
 {
   int tid = *(int*)arg;
 
-  printf("Car (%d) entered tunnel in EW direction...\n", tid);
+  pthread_mutex_lock(&lock); //lock
+
+  if (numEW >= 3 || isAmbulance || ambulancesWaiting >= 0){
+    pthread_cond_wait(&keyEW, &lock);
+  }
+
+  numEW++;
+  printf("Car (%d) entered tunnel in EW direction... %d %d %d\n", tid, numEW, isAmbulance, ambulancesWaiting);
+  pthread_mutex_unlock(&lock); //unlock
+                               
   sleep(EW_SPEED);
-  printf("Car (%d) exited tunnel in EW direction...\n", tid);
+
+  pthread_mutex_lock(&lock); //lock
+  numEW--;
+  printf("Car (%d) exited tunnel in EW direction... %d %d %d\n", tid, numEW, isAmbulance, ambulancesWaiting);
+  pthread_cond_signal(&keyEW);
+  pthread_mutex_unlock(&lock); //unlock
 
   return 0;
 }
@@ -39,9 +58,23 @@ void *wecar(void *arg)
 {
   int tid = *(int *)arg;
 
-  printf("Car (%d) entered tunnel in WE direction...\n", tid);
+  pthread_mutex_lock(&lock); //lock
+
+  if (numWE >= 1){
+    pthread_cond_wait(&keyWE, &lock);
+  }
+
+  numWE++;
+  printf("Car (%d) entered tunnel in WE direction... %d %d %d\n", tid, numWE, isAmbulance, ambulancesWaiting);
+  pthread_mutex_unlock(&lock); //unlock
+
   sleep(WE_SPEED);
-  printf("Car (%d) exited tunnel in WE direction...\n", tid);
+
+  pthread_mutex_lock(&lock); //lock
+  numWE--;
+  printf("Car (%d) exited tunnel in WE direction... %d %d %d\n", tid, numWE, isAmbulance, ambulancesWaiting);
+  pthread_cond_signal(&keyWE);
+  pthread_mutex_unlock(&lock); //unlock
 
   return 0;
 }
@@ -51,23 +84,54 @@ void *ambulance(void *arg)
   int tid = *(int*)arg;
   int direction = EW_DIRECTION;
 
+  pthread_mutex_lock(&lock);
+
   if(direction == EW_DIRECTION) {
-    printf("Ambulance %d entered the tunnel in EW direction\n", tid);
+
+    if (numEW >= 3){
+      ambulancesWaiting++;
+      pthread_cond_wait(&keyEW, &lock);
+      ambulancesWaiting--;
+    }
+
+    numEW++;
+    printf("Ambulance %d entered the tunnel in EW direction %d %d %d\n", tid, numEW, isAmbulance, ambulancesWaiting);
   } else if (direction == WE_DIRECTION) {
-    printf("Ambulance %d entered the tunnel in WE direction\n", tid);
+
+    if (numWE >= 1){
+      ambulancesWaiting++;
+      pthread_cond_wait(&keyWE, &lock);
+      ambulancesWaiting--;
+    }
+
+    numWE++;
+    printf("Ambulance %d entered the tunnel in WE direction %d %d %d\n", tid, numWE, isAmbulance, ambulancesWaiting);
   }
+
+  isAmbulance = 1;
+  pthread_mutex_unlock(&lock);
 
   sleep(1); // ambulance is the fastest
 
+  pthread_mutex_lock(&lock);
+  isAmbulance = 0;
+
   if(direction == EW_DIRECTION) {
-    printf("Ambulance %d exited the tunnel in EW direction\n", tid);
+    numEW--;
+    pthread_cond_signal(&keyEW);
+
+    printf("Ambulance %d exited the tunnel in EW direction %d %d %d\n", tid, numEW, isAmbulance, ambulancesWaiting);
   } else if(direction == WE_DIRECTION) {
-    printf("Ambulance %d exited the tunnel in WE direction\n", tid);
+    numWE--;
+    pthread_cond_signal(&keyWE);
+
+    printf("Ambulance %d exited the tunnel in WE direction %d %d %d\n", tid, numEW, isAmbulance, ambulancesWaiting);
   }
+  
+  pthread_mutex_unlock(&lock);
 
   return 0;
 }
-
 
 int
 main(int argc, char **argv)
