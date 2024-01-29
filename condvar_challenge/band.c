@@ -54,22 +54,103 @@
 int DRUM = 0;
 int SING = 1;
 int GUIT = 2;
+int NONE = 0;
+char drummer[] = "drummer";
+char singer[] = "singer";
+char guitarist[] = "guitarist";
 
-char* names[] = {"drummer", "singer", "guitarist"};
+char* names[] = {drummer, singer, guitarist};
+int drummersReady = 0;
+int singersReady = 0;
+int guitaristsReady = 0;
+int bandDone = 0;
+int bandDrummer;
+int bandSinger;
+int bandGuitarist;
+int idmkr = 1;
 
-
+pthread_cond_t keyDone = PTHREAD_COND_INITIALIZER;
+pthread_cond_t keyS = PTHREAD_COND_INITIALIZER;
+pthread_cond_t keyG = PTHREAD_COND_INITIALIZER;
+pthread_cond_t keyBand = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t lock2 = PTHREAD_MUTEX_INITIALIZER;
 
 // because the code is similar, we'll just have one kind of thread
 // and we'll pass its kind as a parameter
+
+void helper(int id, int kind){
+  if (kind == DRUM){
+    if (bandDrummer == NONE){
+      bandDrummer = id;
+      return;
+    }
+  }
+  else if (kind == SING){
+    if (bandSinger == NONE){
+      bandSinger = id;
+      return;
+    }
+  }
+  else if (kind == GUIT){
+    if (bandGuitarist == NONE){
+      bandGuitarist = id;
+      return;
+    }
+  }
+
+  pthread_cond_wait(&keyDone, &lock);
+  helper(id, kind);
+ 
+}
 void* friend(void * kind_ptr) {
   int kind = *((int*) kind_ptr);
+
   printf("%s arrived\n", names[kind]);
+  pthread_mutex_lock(&lock); // lock
+  //////////////////////////////////
+  
+  int id = idmkr;
+  idmkr++;
+
+  helper(id, kind); 
+  
+  if (bandDrummer == NONE || bandSinger == NONE || bandGuitarist == NONE){
+    pthread_cond_wait(&keyBand, &lock);
+  }
+  else{
+    pthread_cond_broadcast(&keyBand);
+  }
+
   printf("%s playing\n", names[kind]);
-  sleep(1);
+
+  //////////////////////////////////////
+  pthread_mutex_unlock(&lock); // unlock              
+  sleep(1); 
+  pthread_mutex_lock(&lock); // lock
+  //////////////////////////////////
+                             
   printf("%s finished playing\n", names[kind]);
 
+  if (kind == DRUM){
+    bandDrummer = NONE;
+  }
+  else if (kind == SING){
+    bandSinger = NONE;
+  }
+  else if (kind == GUIT){
+    bandGuitarist = NONE;
+  }
+
+  if (bandDrummer == NONE && bandSinger == NONE && bandGuitarist == NONE){
+    pthread_cond_broadcast(&keyDone);
+  }
+
+  //////////////////////////////////////
+  pthread_mutex_unlock(&lock); // unlock
   return NULL;
 }
+
 
 pthread_t friends[100];
 int friend_count = 0;
